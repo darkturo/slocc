@@ -34,6 +34,7 @@ func sloc(path string) (uint, string, error) {
 
 	file, err := os.Open(path)
 	if err != nil {
+		return 0, fileType, err
 	}
 	defer file.Close()
 
@@ -113,7 +114,7 @@ func countLinesOfCode(config slocConfig, file *os.File) (uint, error) {
 
 func isSingleLineComment(config slocConfig, line string) bool {
 	for _, mark := range config.singleLineCommentMarker {
-		if line[0:len(line)] == mark {
+		if line[0:len(mark)] == mark {
 			return true
 		}
 	}
@@ -121,7 +122,8 @@ func isSingleLineComment(config slocConfig, line string) bool {
 }
 
 func startsWithMultilineBeginCommentMark(config slocConfig, line string) bool {
-	return line[0:len(line)] == config.multiLineBeginCommentMark
+	mark := config.multiLineBeginCommentMark
+	return line[0:len(mark)] == mark
 }
 
 func findMultilineEndCommentMarkInThisLine(config slocConfig, line string) bool {
