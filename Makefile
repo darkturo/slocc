@@ -13,7 +13,7 @@ vet: lint
 .PHONY: vet
 
 build: vet
-	go build sloc
+	go build -o slocc main.go 
 .PHONY: build
 
 test:
