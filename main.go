@@ -7,13 +7,16 @@ import (
 )
 
 func main() {
+	results := make(map[string]uint)
 	for _, path := range os.Args {
 		linesOfCode, format, err := sloc(path)
 		if err != nil {
 			fmt.Printf("invalid file %s", path)
 			continue
 		}
+		results[format] += linesOfCode
 	}
+	fmt.Printf("%v", results)
 }
 
 type slocConfig struct {
