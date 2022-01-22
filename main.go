@@ -1,4 +1,4 @@
-package psloc
+package main
 
 import (
 	"bufio"
