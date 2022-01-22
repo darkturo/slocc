@@ -15,7 +15,7 @@ func main() {
 	results := make(map[string]uint)
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() {
+			if !info.IsDir() && isExcluded(path) {
 				files = append(files, path)
 			}
 			return nil
@@ -36,6 +36,23 @@ func main() {
 		results[format] += linesOfCode
 	}
 	fmt.Printf("%v\n", results)
+}
+
+func isExcluded(path string) bool {
+	excluded := []string{
+		".git",
+	}
+
+	for _, pattern := range excluded {
+		match, err := filepath.Match(pattern, path)
+		if err != nil {
+			panic(err)
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }
 
 type slocConfig struct {
