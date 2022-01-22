@@ -4,16 +4,33 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 func main() {
+	files := make([]string, 0, len(os.Args))
 	results := make(map[string]uint)
-	for _, path := range os.Args[1:] {
+	for _, f := range os.Args[1:] {
+		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
+			if !info.IsDir() {
+				files = append(files, path)
+			}
+			return nil
+		})
+		if err != nil {
+			fmt.Printf("error inspecting %s\n", f)
+			continue
+		}
+	}
+	fmt.Printf("FILES: %v\n", files)
+
+	for _, path := range files {
 		linesOfCode, format, err := sloc(path)
 		if err != nil {
-			fmt.Printf("invalid file %s", path)
+			fmt.Printf("invalid file %s\n", path)
 			continue
 		}
 		results[format] += linesOfCode
