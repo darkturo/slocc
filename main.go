@@ -3,13 +3,14 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
 func main() {
 	results := make(map[string]uint)
-	for _, path := range os.Args {
+	for _, path := range os.Args[1:] {
 		linesOfCode, format, err := sloc(path)
 		if err != nil {
 			fmt.Printf("invalid file %s", path)
@@ -17,7 +18,7 @@ func main() {
 		}
 		results[format] += linesOfCode
 	}
-	fmt.Printf("%v", results)
+	fmt.Printf("%v\n", results)
 }
 
 type slocConfig struct {
@@ -38,7 +39,11 @@ func sloc(path string) (uint, string, error) {
 	}
 	defer file.Close()
 
-	lines, err := countLinesOfCode(slocConfig{}, file)
+	lines, err := countLinesOfCode(slocConfig{
+		singleLineCommentMarker:   []string{"//"},
+		multiLineBeginCommentMark: "/*",
+		multiLineEndCommentMark:   "*/",
+	}, file)
 	if err != nil {
 		return 0, fileType, err
 	}
@@ -76,18 +81,25 @@ func countLinesOfCode(config slocConfig, file *os.File) (uint, error) {
 	var line []byte
 	var isPrefix bool
 	var err error
+readLineLoop:
 	for {
 		var loc string
+
+	collectStringLoop:
 		for {
 			line, isPrefix, err = reader.ReadLine()
 			if err != nil {
+				if err == io.EOF {
+					break readLineLoop
+				}
 				return 0, nil
 			}
 			loc += string(line)
 
 			if !isPrefix {
-				break
+				break collectStringLoop
 			}
+
 		}
 
 		if !mlcc.isInContext() {
@@ -110,11 +122,12 @@ func countLinesOfCode(config slocConfig, file *os.File) (uint, error) {
 			}
 		}
 	}
+	return counter, nil
 }
 
 func isSingleLineComment(config slocConfig, line string) bool {
 	for _, mark := range config.singleLineCommentMarker {
-		if line[0:len(mark)] == mark {
+		if len(line) > len(mark) && line[0:len(mark)] == mark {
 			return true
 		}
 	}
@@ -123,7 +136,7 @@ func isSingleLineComment(config slocConfig, line string) bool {
 
 func startsWithMultilineBeginCommentMark(config slocConfig, line string) bool {
 	mark := config.multiLineBeginCommentMark
-	return line[0:len(mark)] == mark
+	return len(line) > len(mark) && line[0:len(mark)] == mark
 }
 
 func findMultilineEndCommentMarkInThisLine(config slocConfig, line string) bool {
