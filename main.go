@@ -50,7 +50,6 @@ func guessFileType(path string) (string, error) {
 
 type multiLineCommentContext struct {
 	level int
-
 }
 
 func (m *multiLineCommentContext) enterContext() {
@@ -70,6 +69,7 @@ func (m multiLineCommentContext) isInContext() bool {
 func countLinesOfCode(config slocConfig, file *os.File) (uint, error) {
 	reader := bufio.NewReader(file)
 
+	var counter uint
 	var mlcc multiLineCommentContext
 	var line []byte
 	var isPrefix bool
@@ -93,16 +93,28 @@ func countLinesOfCode(config slocConfig, file *os.File) (uint, error) {
 				continue
 			}
 
-			if hasMultiLineCommentMark(config, loc {
-
+			if startsWithMultileMark(config, loc) {
+				mlcc.enterContext()
 			}
-		}
 
+			counter++
+		} else {
+			
+		}
 	}
 }
 
 func isSingleLineComment(config slocConfig, line string) bool {
-	for _, mark := config.singleLineCommentMarker {
+	for _, mark := range config.singleLineCommentMarker {
+		if line[0:len(line)] == mark {
+			return true
+		}
+	}
+	return false
+}
+
+func startsWithMultileMark(config slocConfig, line string) bool {
+	for _, mark := range config.multiLineCommentBMarker {
 		if line[0:len(line)] == mark {
 			return true
 		}
