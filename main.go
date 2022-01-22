@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -20,9 +21,9 @@ func main() {
 }
 
 type slocConfig struct {
-	singleLineCommentMarker []string
-	multiLineCommentBMarker []string
-	multiLineCommentEMarker []string
+	singleLineCommentMarker   []string
+	multiLineBeginCommentMark string
+	multiLineEndCommentMark   string
 }
 
 func sloc(path string) (uint, string, error) {
@@ -93,13 +94,19 @@ func countLinesOfCode(config slocConfig, file *os.File) (uint, error) {
 				continue
 			}
 
-			if startsWithMultileMark(config, loc) {
+			if startsWithMultilineBeginCommentMark(config, loc) {
 				mlcc.enterContext()
+				if findMultilineEndCommentMarkInThisLine(config, loc) {
+					mlcc.exitContext()
+				}
+				continue
 			}
 
 			counter++
 		} else {
-			
+			if findMultilineEndCommentMarkInThisLine(config, loc) {
+				mlcc.exitContext()
+			}
 		}
 	}
 }
@@ -113,11 +120,10 @@ func isSingleLineComment(config slocConfig, line string) bool {
 	return false
 }
 
-func startsWithMultileMark(config slocConfig, line string) bool {
-	for _, mark := range config.multiLineCommentBMarker {
-		if line[0:len(line)] == mark {
-			return true
-		}
-	}
-	return false
+func startsWithMultilineBeginCommentMark(config slocConfig, line string) bool {
+	return line[0:len(line)] == config.multiLineBeginCommentMark
+}
+
+func findMultilineEndCommentMarkInThisLine(config slocConfig, line string) bool {
+	return strings.Contains(line, config.multiLineEndCommentMark)
 }
