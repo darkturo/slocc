@@ -15,7 +15,7 @@ func main() {
 	results := make(map[string]uint)
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() && isExcluded(path) {
+			if !info.IsDir() && !isExcluded(path) {
 				files = append(files, path)
 			}
 			return nil
@@ -28,30 +28,28 @@ func main() {
 	fmt.Printf("FILES: %v\n", files)
 
 	for _, path := range files {
-		linesOfCode, format, err := sloc(path)
+		loc, lang, err := sloc(path)
 		if err != nil {
 			fmt.Printf("invalid file %s\n", path)
 			continue
 		}
-		results[format] += linesOfCode
+		results[lang] += loc
 	}
 	fmt.Printf("%v\n", results)
 }
 
-func isExcluded(path string) bool {
-	excluded := []string{
-		".git",
-	}
+var excluded = []string{
+	".git/",
+	".idea/",
+}
 
+func isExcluded(path string) bool {
 	for _, pattern := range excluded {
-		match, err := filepath.Match(pattern, path)
-		if err != nil {
-			panic(err)
-		}
-		if match {
+		if strings.HasPrefix(path, pattern) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -62,10 +60,7 @@ type slocConfig struct {
 }
 
 func sloc(path string) (uint, string, error) {
-	fileType, err := guessFileType(path)
-	if err != nil {
-		return 0, "", err
-	}
+	fileType := guessFileType(path)
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -85,8 +80,15 @@ func sloc(path string) (uint, string, error) {
 	return lines, fileType, nil
 }
 
-func guessFileType(path string) (string, error) {
-	return "go", nil
+var extensions = map[string]string{
+	".go": "go",
+}
+
+func guessFileType(path string) string {
+	if fileType, ok := extensions[filepath.Ext(path)]; ok {
+		return fileType
+	}
+	return "other"
 }
 
 type multiLineCommentContext struct {
