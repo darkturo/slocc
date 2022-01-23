@@ -16,7 +16,13 @@ func main() {
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && !isExcluded(path) {
-				files = append(files, path)
+				binary, err := looksLikeBinary(path)
+				if err != nil {
+					return err
+				}
+				if !binary {
+					files = append(files, path)
+				}
 			}
 			return nil
 		})
@@ -51,6 +57,27 @@ func isExcluded(path string) bool {
 	}
 
 	return false
+}
+
+func looksLikeBinary(path string) (bool, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	buffer := make([]byte, 1024)
+	n, err := file.Read(buffer)
+	if err != nil {
+		return false, err
+	}
+
+	for i := 0; i < n; i++ {
+		if buffer[i] == 0 {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 type slocConfig struct {
