@@ -31,7 +31,6 @@ func main() {
 			continue
 		}
 	}
-	fmt.Printf("FILES: %v\n", files)
 
 	for _, path := range files {
 		loc, lang, err := sloc(path)
