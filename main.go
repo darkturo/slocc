@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 		}
 	}
 
+	totalSLOC := uint(0)
 	for _, path := range files {
 		loc, lang, err := sloc(path)
 		if err != nil {
@@ -39,8 +41,28 @@ func main() {
 			continue
 		}
 		results[lang] += loc
+		totalSLOC += loc
 	}
-	fmt.Printf("%v\n", results)
+
+	tmpl, err := template.New("slocc output").
+		Parse(`
+SLOC	SLOC-by-Language (Sorted)
+{{.Sloc}}	{{range $key, $value := .SlocByLanguage}} {{$key}}={{$value}},{{end}}
+`)
+	if err != nil {
+		panic(err)
+	}
+
+	err = tmpl.Execute(os.Stdout, struct {
+		Sloc           uint
+		SlocByLanguage map[string]uint
+	}{
+		Sloc:           totalSLOC,
+		SlocByLanguage: results,
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 var excluded = []string{
