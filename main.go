@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
+	"github.com/darkturo/slocc/internal/pkg/slocc"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,6 +13,7 @@ import (
 
 func main() {
 	files := make([]string, 0, len(os.Args))
+
 	results := make(map[string]uint)
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
@@ -101,33 +102,6 @@ func looksLikeBinary(path string) (bool, error) {
 	return false, nil
 }
 
-type slocConfig struct {
-	singleLineCommentMarker   []string
-	multiLineBeginCommentMark string
-	multiLineEndCommentMark   string
-}
-
-func sloc(path string) (uint, string, error) {
-	fileType := guessFileType(path)
-
-	file, err := os.Open(path)
-	if err != nil {
-		return 0, fileType, err
-	}
-	defer file.Close()
-
-	lines, err := countLinesOfCode(slocConfig{
-		singleLineCommentMarker:   []string{"//"},
-		multiLineBeginCommentMark: "/*",
-		multiLineEndCommentMark:   "*/",
-	}, file)
-	if err != nil {
-		return 0, fileType, err
-	}
-
-	return lines, fileType, nil
-}
-
 var extensions = map[string]string{
 	".go": "go",
 }
@@ -139,90 +113,23 @@ func guessFileType(path string) string {
 	return "other"
 }
 
-type multiLineCommentContext struct {
-	level int
-}
+func sloc(path string) (uint, string, error) {
+	fileType := guessFileType(path)
 
-func (m *multiLineCommentContext) enterContext() {
-	m.level++
-}
-
-func (m *multiLineCommentContext) exitContext() {
-	if m.level > 0 {
-		m.level--
+	file, err := os.Open(path)
+	if err != nil {
+		return 0, fileType, err
 	}
-}
+	defer file.Close()
 
-func (m multiLineCommentContext) isInContext() bool {
-	return m.level > 0
-}
-
-func countLinesOfCode(config slocConfig, file *os.File) (uint, error) {
-	reader := bufio.NewReader(file)
-
-	var counter uint
-	var mlcc multiLineCommentContext
-	var line []byte
-	var isPrefix bool
-	var err error
-readLineLoop:
-	for {
-		var loc string
-
-	collectStringLoop:
-		for {
-			line, isPrefix, err = reader.ReadLine()
-			if err != nil {
-				if err == io.EOF {
-					break readLineLoop
-				}
-				return 0, nil
-			}
-			loc += string(line)
-
-			if !isPrefix {
-				break collectStringLoop
-			}
-
-		}
-
-		if !mlcc.isInContext() {
-			if isSingleLineComment(config, loc) {
-				continue
-			}
-
-			if startsWithMultilineBeginCommentMark(config, loc) {
-				mlcc.enterContext()
-				if findMultilineEndCommentMarkInThisLine(config, loc) {
-					mlcc.exitContext()
-				}
-				continue
-			}
-
-			counter++
-		} else {
-			if findMultilineEndCommentMarkInThisLine(config, loc) {
-				mlcc.exitContext()
-			}
-		}
+	lines, err := slocc.CountLinesOfCode(slocc.Config{
+		SingleLineCommentMarker:   []string{"//"},
+		MultiLineBeginCommentMark: "/*",
+		MultiLineEndCommentMark:   "*/",
+	}, bufio.NewReader(file))
+	if err != nil {
+		return 0, fileType, err
 	}
-	return counter, nil
-}
 
-func isSingleLineComment(config slocConfig, line string) bool {
-	for _, mark := range config.singleLineCommentMarker {
-		if len(line) > len(mark) && line[0:len(mark)] == mark {
-			return true
-		}
-	}
-	return false
-}
-
-func startsWithMultilineBeginCommentMark(config slocConfig, line string) bool {
-	mark := config.multiLineBeginCommentMark
-	return len(line) > len(mark) && line[0:len(mark)] == mark
-}
-
-func findMultilineEndCommentMarkInThisLine(config slocConfig, line string) bool {
-	return strings.Contains(line, config.multiLineEndCommentMark)
+	return lines, fileType, nil
 }
