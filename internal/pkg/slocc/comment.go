@@ -25,17 +25,17 @@ func (m multiLineCommentContext) isInContext() bool {
 }
 
 // findMultilineEnding returns true if the line ends a multi-line comment
-func findMultilineEnding(config Config, line string) bool {
+func findMultilineEnding(config languageConfig, line string) bool {
 	return strings.Contains(line, config.MultiLineEndCommentMark)
 }
 
 // isMultilineComment returns true if the line starts a multi-line comment
-func isMultilineComment(config Config, line string) bool {
+func isMultilineComment(config languageConfig, line string) bool {
 	return strings.Contains(line, config.MultiLineBeginCommentMark)
 }
 
 // isSingleLineComment returns true if the line is a single-line comment
-func isSingleLineComment(config Config, line string) bool {
+func isSingleLineComment(config languageConfig, line string) bool {
 	for _, marker := range config.SingleLineCommentMarker {
 		if strings.HasPrefix(line, marker) {
 			return true

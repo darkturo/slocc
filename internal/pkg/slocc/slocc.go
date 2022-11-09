@@ -2,22 +2,19 @@ package slocc
 
 import (
 	"bufio"
+	"github.com/darkturo/slocc/internal/pkg/filetype"
 	"io"
 )
 
-type Config struct {
-	SingleLineCommentMarker   []string
-	MultiLineBeginCommentMark string
-	MultiLineEndCommentMark   string
-}
-
 // CountLinesOfCode counts the lines of code in a file  (excluding comments and empty lines)
-func CountLinesOfCode(config Config, file *bufio.Reader) (uint, error) {
+func CountLinesOfCode(fileType filetype.FileType, file *bufio.Reader) (uint, error) {
 	var counter uint
 	var commentContext multiLineCommentContext
 	var line []byte
 	var isPrefix bool
 	var err error
+
+	config := languageConfigurations[fileType]
 readLineLoop:
 	for {
 		var loc string

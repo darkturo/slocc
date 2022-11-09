@@ -12,6 +12,11 @@ import (
 	"text/template"
 )
 
+var excluded = []string{
+	".git/",
+	".idea/",
+}
+
 func main() {
 	files := make([]string, 0, len(os.Args))
 
@@ -65,11 +70,6 @@ SLOC	SLOC-by-Language (Sorted)
 	}
 }
 
-var excluded = []string{
-	".git/",
-	".idea/",
-}
-
 func isExcluded(path string) bool {
 	for _, pattern := range excluded {
 		if strings.HasPrefix(path, pattern) {
@@ -78,27 +78,6 @@ func isExcluded(path string) bool {
 	}
 
 	return false
-}
-
-func looksLikeBinary(path string) (bool, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return false, err
-	}
-	defer file.Close()
-
-	buffer := make([]byte, 1024)
-	n, err := file.Read(buffer)
-	if err != nil {
-		return false, err
-	}
-
-	for i := 0; i < n; i++ {
-		if buffer[i] == 0 {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func sloc(path string) (uint, filetype.FileType, error) {
@@ -110,11 +89,7 @@ func sloc(path string) (uint, filetype.FileType, error) {
 	}
 	defer file.Close()
 
-	lines, err := slocc.CountLinesOfCode(slocc.Config{
-		SingleLineCommentMarker:   []string{"//"},
-		MultiLineBeginCommentMark: "/*",
-		MultiLineEndCommentMark:   "*/",
-	}, bufio.NewReader(file))
+	lines, err := slocc.CountLinesOfCode(fileType, bufio.NewReader(file))
 	if err != nil {
 		return 0, fileType, err
 	}
