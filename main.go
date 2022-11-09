@@ -8,22 +8,16 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 )
 
-var excluded = []string{
-	".git/",
-	".idea/",
-}
-
 func main() {
 	files := make([]string, 0, len(os.Args))
-
+	excludedPaths := loadExcludedPaths()
 	results := make(map[filetype.FileType]uint)
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() && !isExcluded(path) {
+			if !info.IsDir() && !isExcluded(excludedPaths, path) {
 				files = append(files, path)
 			}
 			return nil
@@ -36,17 +30,28 @@ func main() {
 
 	totalSLOC := uint(0)
 	for _, path := range files {
-		loc, lang, err := sloc(path)
-		if err != nil {
-			fmt.Printf("invalid file %s\n", path)
+		fileType := filetype.Guess(path)
+		if fileType == filetype.Binary {
 			continue
 		}
 
-		if lang == filetype.Binary {
+		file, err := os.Open(path)
+		if err != nil {
+			fmt.Printf("1 invalid file %s: %v\n", path, err)
+			file.Close()
 			continue
 		}
-		results[lang] += loc
-		totalSLOC += loc
+
+		lines, err := slocc.CountLinesOfCode(fileType, bufio.NewReader(file))
+		if err != nil {
+			fmt.Printf("* invalid file %s: %v\n", path, err)
+			file.Close()
+			continue
+		}
+
+		results[fileType] += lines
+		totalSLOC += lines
+		file.Close()
 	}
 
 	tmpl, err := template.New("slocc output").
@@ -70,29 +75,51 @@ SLOC	SLOC-by-Language (Sorted)
 	}
 }
 
-func isExcluded(path string) bool {
+func loadExcludedPaths() []string {
+	excludedPaths := []string{
+		".git/",
+		".idea/",
+		"vendor/",
+		"node_modules/",
+		"venv/",
+		"__pycache__/",
+		"*.egg-info/",
+		"*.egg/",
+		"*.pyc",
+		"*.min.js",
+		"*.min.css",
+		"*.min.map",
+		"*.map",
+		"*.gz",
+		"*.zip",
+		"*.tar",
+		"*.tar.gz",
+	}
+
+	// read .gitignore and add to excludedPaths
+	file, err := os.Open(".gitignore")
+	if err != nil {
+		return excludedPaths
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		excludedPaths = append(excludedPaths, scanner.Text())
+	}
+	return excludedPaths
+}
+
+func isExcluded(excluded []string, path string) bool {
 	for _, pattern := range excluded {
-		if strings.HasPrefix(path, pattern) {
+		match, err := filepath.Match(pattern, path)
+		if err != nil {
+			return false
+		}
+		if match {
 			return true
 		}
 	}
 
 	return false
-}
-
-func sloc(path string) (uint, filetype.FileType, error) {
-	fileType := filetype.Guess(path)
-
-	file, err := os.Open(path)
-	if err != nil {
-		return 0, fileType, err
-	}
-	defer file.Close()
-
-	lines, err := slocc.CountLinesOfCode(fileType, bufio.NewReader(file))
-	if err != nil {
-		return 0, fileType, err
-	}
-
-	return lines, fileType, nil
 }

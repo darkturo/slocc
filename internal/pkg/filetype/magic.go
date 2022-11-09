@@ -16,6 +16,7 @@ func Guess(path string) FileType {
 	if err != nil {
 		return Other
 	}
+	defer openFile.Close()
 
 	if looksLikeBinary(bufio.NewReader(openFile)) {
 		return Other
