@@ -7,15 +7,6 @@ import (
 	"strings"
 )
 
-var extensions = map[string]FileType{
-	".go":   Go,
-	".py":   Python,
-	".pl":   Perl,
-	".rb":   Ruby,
-	".sh":   Bash,
-	".bash": Bash,
-}
-
 // Guess returns the file type of the given file path
 func Guess(path string) FileType {
 	if fileType, ok := extensions[filepath.Ext(path)]; ok {
