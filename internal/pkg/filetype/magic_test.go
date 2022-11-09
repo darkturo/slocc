@@ -6,9 +6,8 @@ import (
 	"testing"
 )
 
-// Test the Shebang function
+// Test the shebang function
 func TestDetect(t *testing.T) {
-	// iterate over the test cases
 	for _, tc := range []struct {
 		input    string
 		expected FileType
@@ -26,8 +25,25 @@ func TestDetect(t *testing.T) {
 		{"", Other},
 	} {
 		// run the test case
-		if result := Shebang(bufio.NewReader(strings.NewReader(tc.input))); result != tc.expected {
-			t.Errorf("Shebang(%s) = %s, expected %s", tc.input, result, tc.expected)
+		if result := shebang(bufio.NewReader(strings.NewReader(tc.input))); result != tc.expected {
+			t.Errorf("shebang(%s) = %s, expected %s", tc.input, result, tc.expected)
+		}
+	}
+}
+
+// Test the looksLikeBinary function
+func TestLooksLikeBinary(t *testing.T) {
+	for _, tc := range []struct {
+		input    []byte
+		expected bool
+	}{
+		{[]byte("this is just a text"), false},
+		{[]byte("this is a text with a \x00 byte"), true},
+		{[]byte(""), false},
+	} {
+		// run the test case
+		if result := looksLikeBinary(bufio.NewReader(strings.NewReader(string(tc.input)))); result != tc.expected {
+			t.Errorf("looksLikeBinary(%s) = %v, expected %v", tc.input, result, tc.expected)
 		}
 	}
 }

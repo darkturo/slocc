@@ -19,13 +19,7 @@ func main() {
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && !isExcluded(path) {
-				binary, err := looksLikeBinary(path)
-				if err != nil {
-					return err
-				}
-				if !binary {
-					files = append(files, path)
-				}
+				files = append(files, path)
 			}
 			return nil
 		})
@@ -40,6 +34,10 @@ func main() {
 		loc, lang, err := sloc(path)
 		if err != nil {
 			fmt.Printf("invalid file %s\n", path)
+			continue
+		}
+
+		if lang == filetype.Binary {
 			continue
 		}
 		results[lang] += loc
