@@ -24,13 +24,13 @@ func Guess(path string) FileType {
 
 	openFile, err := os.Open(path)
 	if err != nil {
-		return Detect(bufio.NewReader(openFile))
+		return Shebang(bufio.NewReader(openFile))
 	}
 	return Other
 }
 
-// Detect detects the FileType of a given input by reading the first line
-func Detect(input *bufio.Reader) FileType {
+// Shebang detects the FileType of a given input by reading the first line
+func Shebang(input *bufio.Reader) FileType {
 	line, _, err := input.ReadLine()
 	if err == nil {
 		if len(line) > 2 && line[0] == '#' && line[1] == '!' {

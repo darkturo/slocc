@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// Test the Detect function
+// Test the Shebang function
 func TestDetect(t *testing.T) {
 	// iterate over the test cases
 	for _, tc := range []struct {
@@ -26,8 +26,8 @@ func TestDetect(t *testing.T) {
 		{"", Other},
 	} {
 		// run the test case
-		if result := Detect(bufio.NewReader(strings.NewReader(tc.input))); result != tc.expected {
-			t.Errorf("Detect(%s) = %s, expected %s", tc.input, result, tc.expected)
+		if result := Shebang(bufio.NewReader(strings.NewReader(tc.input))); result != tc.expected {
+			t.Errorf("Shebang(%s) = %s, expected %s", tc.input, result, tc.expected)
 		}
 	}
 }
