@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/darkturo/slocc/internal/pkg/filetype"
 	"github.com/darkturo/slocc/internal/pkg/slocc"
 	"io/fs"
 	"os"
@@ -14,7 +15,7 @@ import (
 func main() {
 	files := make([]string, 0, len(os.Args))
 
-	results := make(map[string]uint)
+	results := make(map[filetype.FileType]uint)
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && !isExcluded(path) {
@@ -56,7 +57,7 @@ SLOC	SLOC-by-Language (Sorted)
 
 	err = tmpl.Execute(os.Stdout, struct {
 		Sloc           uint
-		SlocByLanguage map[string]uint
+		SlocByLanguage map[filetype.FileType]uint
 	}{
 		Sloc:           totalSLOC,
 		SlocByLanguage: results,
@@ -102,19 +103,8 @@ func looksLikeBinary(path string) (bool, error) {
 	return false, nil
 }
 
-var extensions = map[string]string{
-	".go": "go",
-}
-
-func guessFileType(path string) string {
-	if fileType, ok := extensions[filepath.Ext(path)]; ok {
-		return fileType
-	}
-	return "other"
-}
-
-func sloc(path string) (uint, string, error) {
-	fileType := guessFileType(path)
+func sloc(path string) (uint, filetype.FileType, error) {
+	fileType := filetype.Guess(path)
 
 	file, err := os.Open(path)
 	if err != nil {
