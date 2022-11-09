@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var extensions = map[string]FileType{
@@ -31,16 +32,18 @@ func Guess(path string) FileType {
 // Detect detects the FileType of a given input by reading the first line
 func Detect(input *bufio.Reader) FileType {
 	line, _, err := input.ReadLine()
-	if err != nil {
-		switch line {
-		case []byte("#!/usr/bin/env python"), []byte("#!/usr/bin/python"), []byte("#!/usr/bin/python3"):
-			return Python
-		case []byte("#!/usr/bin/env perl"), []byte("#!/usr/bin/perl"):
-			return Perl
-		case []byte("#!/usr/bin/env ruby"), []byte("#!/usr/bin/ruby"):
-			return Ruby
-		case []byte("#!/usr/bin/bash"), []byte("#!/usr/bash"):
-			return Bash
+	if err == nil {
+		if len(line) > 2 && line[0] == '#' && line[1] == '!' {
+			switch {
+			case strings.Contains(string(line), "python"):
+				return Python
+			case strings.Contains(string(line), "perl"):
+				return Perl
+			case strings.Contains(string(line), "ruby"):
+				return Ruby
+			case strings.Contains(string(line), "bash"):
+				return Bash
+			}
 		}
 	}
 
