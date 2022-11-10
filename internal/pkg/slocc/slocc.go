@@ -2,6 +2,7 @@ package slocc
 
 import (
 	"bufio"
+	"github.com/darkturo/slocc/internal/pkg/config"
 	"github.com/darkturo/slocc/internal/pkg/filetype"
 	"io"
 )
@@ -14,7 +15,7 @@ func CountLinesOfCode(fileType filetype.FileType, file *bufio.Reader) (uint, err
 	var isPrefix bool
 	var err error
 
-	config := languageConfigurations[fileType]
+	lang := config.Languages[fileType]
 readLineLoop:
 	for {
 		var loc string
@@ -37,13 +38,13 @@ readLineLoop:
 		}
 
 		if !commentContext.isInContext() {
-			if isSingleLineComment(config, loc) {
+			if isSingleLineComment(lang, loc) {
 				continue
 			}
 
-			if isMultilineComment(config, loc) {
+			if isMultilineComment(lang, loc) {
 				commentContext.enterContext()
-				if findMultilineEnding(config, loc) {
+				if findMultilineEnding(lang, loc) {
 					commentContext.exitContext()
 				}
 				continue
@@ -51,7 +52,7 @@ readLineLoop:
 
 			counter++
 		} else {
-			if findMultilineEnding(config, loc) {
+			if findMultilineEnding(lang, loc) {
 				commentContext.exitContext()
 			}
 		}

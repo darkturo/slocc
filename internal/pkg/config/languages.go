@@ -1,16 +1,16 @@
-package slocc
+package config
 
 import (
 	"github.com/darkturo/slocc/internal/pkg/filetype"
 )
 
-type languageConfig struct {
-	SingleLineCommentMarker   []string
-	MultiLineBeginCommentMark string
-	MultiLineEndCommentMark   string
+type Lang struct {
+	SingleLineCommentMarker   []string `json:"singleLineCommentMarker"`
+	MultiLineBeginCommentMark string   `json:"multiLineBeginCommentMark"`
+	MultiLineEndCommentMark   string   `json:"multiLineEndCommentMark"`
 }
 
-var languageConfigurations = map[filetype.FileType]languageConfig{
+var Languages = map[filetype.FileType]Lang{
 	filetype.Go: {
 		SingleLineCommentMarker:   []string{"//"},
 		MultiLineBeginCommentMark: "/*",

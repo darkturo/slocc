@@ -1,6 +1,9 @@
 package slocc
 
-import "strings"
+import (
+	"github.com/darkturo/slocc/internal/pkg/config"
+	"strings"
+)
 
 // represents a multi-line comment, which can be nested
 type multiLineCommentContext struct {
@@ -25,17 +28,17 @@ func (m multiLineCommentContext) isInContext() bool {
 }
 
 // findMultilineEnding returns true if the line ends a multi-line comment
-func findMultilineEnding(config languageConfig, line string) bool {
-	return strings.Contains(line, config.MultiLineEndCommentMark)
+func findMultilineEnding(language config.Lang, line string) bool {
+	return strings.Contains(line, language.MultiLineEndCommentMark)
 }
 
 // isMultilineComment returns true if the line starts a multi-line comment
-func isMultilineComment(config languageConfig, line string) bool {
+func isMultilineComment(config config.Lang, line string) bool {
 	return strings.Contains(line, config.MultiLineBeginCommentMark)
 }
 
 // isSingleLineComment returns true if the line is a single-line comment
-func isSingleLineComment(config languageConfig, line string) bool {
+func isSingleLineComment(config config.Lang, line string) bool {
 	for _, marker := range config.SingleLineCommentMarker {
 		if strings.HasPrefix(line, marker) {
 			return true
