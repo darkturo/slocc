@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/darkturo/slocc/internal/pkg/config"
 	"github.com/darkturo/slocc/internal/pkg/filetype"
 	"github.com/darkturo/slocc/internal/pkg/slocc"
 	"io/fs"
@@ -13,11 +14,11 @@ import (
 
 func main() {
 	files := make([]string, 0, len(os.Args))
-	excludedPaths := loadExcludedPaths()
+	excludedPaths := config.LoadIgnoredPaths()
 	results := make(map[filetype.FileType]uint)
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() && !isExcluded(excludedPaths, path) {
+			if !info.IsDir() && !config.IsExcluded(excludedPaths, path) {
 				files = append(files, path)
 			}
 			return nil
@@ -73,53 +74,4 @@ SLOC	SLOC-by-Language (Sorted)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func loadExcludedPaths() []string {
-	excludedPaths := []string{
-		".git/",
-		".idea/",
-		"vendor/",
-		"node_modules/",
-		"venv/",
-		"__pycache__/",
-		"*.egg-info/",
-		"*.egg/",
-		"*.pyc",
-		"*.min.js",
-		"*.min.css",
-		"*.min.map",
-		"*.map",
-		"*.gz",
-		"*.zip",
-		"*.tar",
-		"*.tar.gz",
-	}
-
-	// read .gitignore and add to excludedPaths
-	file, err := os.Open(".gitignore")
-	if err != nil {
-		return excludedPaths
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		excludedPaths = append(excludedPaths, scanner.Text())
-	}
-	return excludedPaths
-}
-
-func isExcluded(excluded []string, path string) bool {
-	for _, pattern := range excluded {
-		match, err := filepath.Match(pattern, path)
-		if err != nil {
-			return false
-		}
-		if match {
-			return true
-		}
-	}
-
-	return false
 }
