@@ -7,15 +7,23 @@ import (
 	"io"
 )
 
-// CountLinesOfCode counts the lines of code in a file  (excluding comments and empty lines)
-func CountLinesOfCode(fileType filetype.FileType, file *bufio.Reader) (uint, error) {
+type LinesOfCodeCounter struct {
+	settings config.Settings
+}
+
+func New(settings config.Settings) LinesOfCodeCounter {
+	return LinesOfCodeCounter{settings: settings}
+}
+
+// Count counts the lines of code in a file  (excluding comments and empty lines)
+func (c LinesOfCodeCounter) Count(fileType filetype.FileType, file *bufio.Reader) (uint, error) {
 	var counter uint
 	var commentContext multiLineCommentContext
 	var line []byte
 	var isPrefix bool
 	var err error
 
-	lang := config.Languages[fileType]
+	lang := c.settings.GetLang(fileType)
 readLineLoop:
 	for {
 		var loc string

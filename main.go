@@ -14,11 +14,14 @@ import (
 
 func main() {
 	files := make([]string, 0, len(os.Args))
-	excludedPaths := config.LoadIgnoredPaths()
+
+	settings := config.LoadSettings()
+	counter := slocc.New(settings)
+
 	results := make(map[filetype.FileType]uint)
 	for _, f := range os.Args[1:] {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() && !config.IsExcluded(excludedPaths, path) {
+			if !info.IsDir() && !settings.IsIgnored(path) {
 				files = append(files, path)
 			}
 			return nil
@@ -43,7 +46,7 @@ func main() {
 			continue
 		}
 
-		lines, err := slocc.CountLinesOfCode(fileType, bufio.NewReader(file))
+		lines, err := counter.Count(fileType, bufio.NewReader(file))
 		if err != nil {
 			fmt.Printf("* invalid file %s: %v\n", path, err)
 			file.Close()

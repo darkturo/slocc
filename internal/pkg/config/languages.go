@@ -10,7 +10,7 @@ type Lang struct {
 	MultiLineEndCommentMark   string   `json:"multiLineEndCommentMark"`
 }
 
-var Languages = map[filetype.FileType]Lang{
+var defaultLanguages = map[filetype.FileType]Lang{
 	filetype.Go: {
 		SingleLineCommentMarker:   []string{"//"},
 		MultiLineBeginCommentMark: "/*",
