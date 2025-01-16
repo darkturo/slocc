@@ -22,7 +22,7 @@ func (s Settings) IsIgnored(path string) bool {
 	for _, pattern := range s.Ignore {
 		var matched bool
 		normalizedPath := filepath.ToSlash(filepath.Clean(path))
-		if pattern[len(pattern)-1] == '/' {
+		if len(pattern) > 0 && pattern[len(pattern)-1] == '/' {
 			matched = strings.Contains(normalizedPath, pattern)
 		} else {
 			var err error
