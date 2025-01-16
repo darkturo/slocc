@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 )
 
-const SettingsFile = "~/.slocc.json"
-
 type Settings struct {
 	// Ignore is a list of file patterns to ignore
 	Ignore IgnoredPaths `json:"ignore"`
@@ -41,6 +39,8 @@ func (s Settings) GetLang(fileType filetype.FileType) Lang {
 // If there is no settings available it uses slocc's default settings to create one.
 // If the file exists but is unreadable, it warns and returns the default settings
 func LoadSettings() Settings {
+	SettingsFile := fmt.Sprintf("%s/.slocc.json", os.Getenv("HOME"))
+
 	settings := getDefaultSettings()
 
 	// Check if SETTINGS_FILE exists
