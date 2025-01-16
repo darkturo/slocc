@@ -23,6 +23,10 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	if len(flag.Args()) == 0 {
+		flag.Usage()
+		os.Exit(0)
+	}
 
 	files := make([]string, 0, len(os.Args))
 
