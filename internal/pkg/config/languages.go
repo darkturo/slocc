@@ -36,4 +36,14 @@ var defaultLanguages = map[filetype.FileType]Lang{
 		MultiLineBeginCommentMark: "",
 		MultiLineEndCommentMark:   "",
 	},
+	filetype.Cpp: {
+		SingleLineCommentMarker:   []string{"//"},
+		MultiLineBeginCommentMark: "/*",
+		MultiLineEndCommentMark:   "*/",
+	},
+	filetype.Cuda: {
+		SingleLineCommentMarker:   []string{"//"},
+		MultiLineBeginCommentMark: "/*",
+		MultiLineEndCommentMark:   "*/",
+	},
 }

@@ -8,6 +8,8 @@ const (
 	Perl   FileType = "perl"
 	Ruby   FileType = "ruby"
 	Bash   FileType = "bash"
+	Cpp    FileType = "cpp"
+	Cuda   FileType = "cuda"
 
 	Binary FileType = "binary"
 	Text   FileType = "text"
