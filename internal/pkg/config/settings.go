@@ -7,6 +7,7 @@ import (
 	"github.com/darkturo/slocc/internal/pkg/filetype"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Settings struct {
@@ -19,12 +20,18 @@ type Settings struct {
 
 func (s Settings) IsIgnored(path string) bool {
 	for _, pattern := range s.Ignore {
-		match, err := filepath.Match(pattern, path)
-		if err != nil {
-			fmt.Printf("Warning: pattern '%s'", pattern)
-			continue
+		var matched bool
+		normalizedPath := filepath.ToSlash(filepath.Clean(path))
+		if pattern[len(pattern)-1] == '/' {
+			matched = strings.Contains(normalizedPath, pattern)
+		} else {
+			var err error
+			matched, err = filepath.Match(pattern, normalizedPath)
+			if err != nil {
+				fmt.Printf("WARNING: pattern '%s'", pattern)
+			}
 		}
-		if match {
+		if matched {
 			return true
 		}
 	}
