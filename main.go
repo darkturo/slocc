@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"github.com/darkturo/slocc/internal/pkg/config"
 	"github.com/darkturo/slocc/internal/pkg/filetype"
@@ -13,13 +14,23 @@ import (
 )
 
 func main() {
+	flag.Usage = func() {
+		program := os.Args[0]
+		if program[0:2] == "./" {
+			program = program[2:]
+		}
+		fmt.Fprintf(os.Stderr, "Usage: %s [-h] [<SOURCE_CODE_DIRs>]\n", program)
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
 	files := make([]string, 0, len(os.Args))
 
 	settings := config.LoadSettings()
 	counter := slocc.New(settings)
 
 	results := make(map[filetype.FileType]uint)
-	for _, f := range os.Args[1:] {
+	for _, f := range flag.Args() {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && !settings.IsIgnored(path) {
 				files = append(files, path)
