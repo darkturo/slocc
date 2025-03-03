@@ -26,6 +26,7 @@ func init() {
 
 type options struct {
 	showHelp    bool
+	verbose     bool
 	directories []string
 }
 
@@ -33,6 +34,7 @@ func parseArgs() options {
 	opts := options{}
 
 	flag.BoolVar(&opts.showHelp, "h", false, "Show usage information")
+	flag.BoolVar(&opts.verbose, "v", false, "Be a bit more chatty...")
 	flag.Parse()
 
 	if opts.showHelp {
@@ -59,14 +61,19 @@ func main() {
 
 	files := make([]string, 0, len(os.Args))
 
+	var ignored uint = 0
 	settings := config.LoadSettings()
 	counter := slocc.New(settings)
 
 	results := make(map[filetype.FileType]uint)
 	for _, f := range opts.directories {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() && !settings.IsIgnored(path) {
-				files = append(files, path)
+			if !info.IsDir() {
+				if !settings.IsIgnored(path) {
+					files = append(files, path)
+				} else {
+					ignored++
+				}
 			}
 			return nil
 		})
@@ -106,17 +113,24 @@ func main() {
 		Parse(`
 SLOC	SLOC-by-Language (Sorted)
 {{.Sloc}}	{{range $key, $value := .SlocByLanguage}} {{$key}}={{$value}},{{end}}
+{{if .Verbose}}
+Ignored {{.IgnoredFiles}} files matching .gitignore and default ignore rules.
+{{end}}
 `)
 	if err != nil {
 		panic(err)
 	}
 
 	err = tmpl.Execute(os.Stdout, struct {
+		IgnoredFiles   uint
 		Sloc           uint
 		SlocByLanguage map[filetype.FileType]uint
+		Verbose        bool
 	}{
+		IgnoredFiles:   ignored,
 		Sloc:           totalSLOC,
 		SlocByLanguage: results,
+		Verbose:        opts.verbose,
 	})
 	if err != nil {
 		panic(err)
