@@ -13,7 +13,7 @@ import (
 	"text/template"
 )
 
-func main() {
+func init() {
 	flag.Usage = func() {
 		program := os.Args[0]
 		if program[0:2] == "./" {
@@ -22,6 +22,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [-h] [<SOURCE_CODE_DIRs>]\n", program)
 		flag.PrintDefaults()
 	}
+}
+
+func main() {
 	flag.Parse()
 	if len(flag.Args()) == 0 {
 		flag.Usage()
