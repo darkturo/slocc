@@ -13,7 +13,7 @@ vet: lint
 .PHONY: vet
 
 build: vet
-	go build -o slocc main.go 
+	go build github.com/darkturo/slocc/cmd/slocc
 .PHONY: build
 
 test:
