@@ -19,14 +19,40 @@ func init() {
 		if program[0:2] == "./" {
 			program = program[2:]
 		}
-		fmt.Fprintf(os.Stderr, "Usage: %s [-h] [<SOURCE_CODE_DIRs>]\n", program)
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] <SOURCE_CODE_DIRs>\n", program)
 		flag.PrintDefaults()
 	}
 }
 
-func main() {
+type options struct {
+	showHelp    bool
+	directories []string
+}
+
+func parseArgs() options {
+	opts := options{}
+
+	flag.BoolVar(&opts.showHelp, "h", false, "Show usage information")
 	flag.Parse()
+
+	if opts.showHelp {
+		flag.Usage()
+		os.Exit(0)
+	}
+
 	if len(flag.Args()) == 0 {
+		fmt.Fprintf(os.Stderr, "Error: no directories specified\n")
+		os.Exit(0)
+	}
+
+	opts.directories = flag.Args()
+
+	return opts
+}
+
+func main() {
+	opts := parseArgs()
+	if opts.showHelp {
 		flag.Usage()
 		os.Exit(0)
 	}
@@ -37,7 +63,7 @@ func main() {
 	counter := slocc.New(settings)
 
 	results := make(map[filetype.FileType]uint)
-	for _, f := range flag.Args() {
+	for _, f := range opts.directories {
 		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && !settings.IsIgnored(path) {
 				files = append(files, path)
