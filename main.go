@@ -15,11 +15,8 @@ import (
 
 func init() {
 	flag.Usage = func() {
-		program := os.Args[0]
-		if program[0:2] == "./" {
-			program = program[2:]
-		}
-		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] <SOURCE_CODE_DIRs>\n", program)
+		program := filepath.Base(os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] <SOURCE_CODE_DIRs>\nOptions:\n", program)
 		flag.PrintDefaults()
 	}
 }
