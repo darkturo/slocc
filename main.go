@@ -15,8 +15,7 @@ import (
 
 func init() {
 	flag.Usage = func() {
-		program := filepath.Base(os.Args[0])
-		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] <SOURCE_CODE_DIRs>\nOptions:\n", program)
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] <SOURCE_CODE_DIRs>\nOptions:\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
 }
@@ -40,11 +39,10 @@ func parseArgs() options {
 	}
 
 	if len(flag.Args()) == 0 {
-		fmt.Fprintf(os.Stderr, "Error: no directories specified\n")
-		os.Exit(0)
+		opts.directories = []string{"."}
+	} else {
+		opts.directories = flag.Args()
 	}
-
-	opts.directories = flag.Args()
 
 	return opts
 }
