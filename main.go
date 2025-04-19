@@ -88,20 +88,18 @@ func main() {
 		file, err := os.Open(path)
 		if err != nil {
 			fmt.Printf("1 invalid file %s: %v\n", path, err)
-			file.Close()
 			continue
 		}
+		defer file.Close()
 
 		lines, err := counter.Count(fileType, bufio.NewReader(file))
 		if err != nil {
 			fmt.Printf("* invalid file %s: %v\n", path, err)
-			file.Close()
 			continue
 		}
 
 		results[fileType] += lines
 		totalSLOC += lines
-		file.Close()
 	}
 
 	tmpl, err := template.New("slocc output").
