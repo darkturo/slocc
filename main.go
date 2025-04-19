@@ -62,8 +62,11 @@ func main() {
 
 	results := make(map[filetype.FileType]uint)
 	for _, f := range opts.directories {
-		err := filepath.Walk(f, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() {
+		err := filepath.WalkDir(f, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			if !d.IsDir() {
 				if !settings.IsIgnored(path) {
 					files = append(files, path)
 				} else {

@@ -9,7 +9,7 @@
 ## 🧹 Code Quality Enhancements
 
 - [x] Use `defer file.Close()` only when file opening succeeds (avoid closing nil)
-- [ ] Replace `filepath.Walk` with `filepath.WalkDir` for improved traversal performance
+- [x] Replace `filepath.Walk` with `filepath.WalkDir` for improved traversal performance
 - [ ] Sort language keys before printing output for deterministic language order
 - [ ] Extract `.tmpl` output into a separate template file for easier customization (optional)
 
